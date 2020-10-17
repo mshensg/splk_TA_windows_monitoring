@@ -1,12 +1,3 @@
-<#$logfile = Get-ItemProperty c:\logs\processinfo.json -ErrorAction SilentlyContinue
-if($logfile){
-    $lastupdate = $logfile.LastWriteTime
-    $age = $(Get-Date) - $lastupdate
-    if($age.TotalHours -gt 2){
-        Remove-Item C:\logs\processinfo.json
-    }
-}#>
-
 $s = Get-WmiObject -Query "Select * from Win32_Process"
 $processes = $s | Select-Object @{n="timestamp";e={Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff K"}},Caption,CommandLine,CreationDate,Description,ExecutablePath,ExecutionState,Handle,HandleCount,InstallDate,KernelModeTime,MaximumWorkingSetSize,MinimumWorkingSetSize,Name,OtherOperationCount,OtherTransferCount,PageFaults,PageFileUsage,ParentProcessId,PeakPageFileUsage,PeakVirtualSize,PeakWorkingSetSize,Priority,PrivatePageCount,ProcessId,QuotaNonPagedPoolUsage,QuotaPagedPoolUsage,QuotaPeakNonPagedPoolUsage,QuotaPeakPagedPoolUsage,ReadOperationCount,ReadTransferCount,SessionId,Status,TerminationDate,ThreadCount,UserModeTime,VirtualSize,WorkingSetSize,WriteOperationCount,WriteTransferCount
 
@@ -63,5 +54,4 @@ foreach ($p in $processes)
 
     }
 }
-#$processes | ForEach-Object {($_ | ConvertTo-Json -Compress) | Add-content c:\logs\processinfo.json}
 $processes | ForEach-Object {Write-Output ($_ | ConvertTo-Json -Compress)}
