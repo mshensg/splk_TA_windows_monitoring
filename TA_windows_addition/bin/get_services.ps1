@@ -1,4 +1,4 @@
-$s = Get-WmiObject -Query "Select * from Win32_Service"
+﻿$s = Get-WmiObject -Query "Select * from Win32_Service"
 
 $services = $s | Select-Object @{n="timestamp";e={Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff K"}},AcceptPause,AcceptStop,Caption,DelayedAutoStart,Description,DesktopInteract,DisplayName,ErrorControl,ExitCode,InstallDate,Name,PathName,ProcessId,ServiceType,Started,StartMode,StartName,State,Status
 
@@ -13,7 +13,7 @@ foreach($exe in $executables)
     Add-Member -InputObject $exe -MemberType NoteProperty -Name SHA1Hash -Value (Get-FileHash $exe.PathName -Algorithm SHA1 -ErrorAction SilentlyContinue).Hash
     Add-Member -InputObject $exe -MemberType NoteProperty -Name SHA512Hash -Value (Get-FileHash $exe.PathName -Algorithm SHA512 -ErrorAction SilentlyContinue).Hash
     $fileinfo = Get-AuthenticodeSignature $exe.PathName 
-    $certificateinfo = $fileinfo | Select-Object SignerCertificate,TimeStamperCertificate,Status,StatusMessage
+    $certificateinfo = $fileinfo | Select-Object SignerCertificate,TimeStamperCertificate,CertificateStatus,CertificateStatusMessage
     $certificateinfo.SignerCertificate = $fileinfo.SignerCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
     $certificateinfo.TimeStamperCertificate = $fileinfo.TimeStamperCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
     Add-Member -InputObject $exe -MemberType NoteProperty -Name CertificateInfo -Value $certificateinfo
@@ -40,4 +40,5 @@ foreach ($p in $services)
         Add-Member -InputObject $p -MemberType NoteProperty -Name ExecutableDetails -Value $filedetails.ExecutableDetails
     }
 }
-$services | ForEach-Object {Write-Output ($_ | ConvertTo-Json -Compress)}
+
+$services | ForEach-Object {Write-Host ($_ | ConvertTo-Json -Compress)}

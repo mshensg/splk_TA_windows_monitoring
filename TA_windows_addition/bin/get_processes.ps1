@@ -1,4 +1,4 @@
-$s = Get-WmiObject -Query "Select * from Win32_Process"
+﻿$s = Get-WmiObject -Query "Select * from Win32_Process"
 $processes = $s | Select-Object @{n="timestamp";e={Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff K"}},Caption,CommandLine,CreationDate,Description,ExecutablePath,ExecutionState,Handle,HandleCount,InstallDate,KernelModeTime,MaximumWorkingSetSize,MinimumWorkingSetSize,Name,OtherOperationCount,OtherTransferCount,PageFaults,PageFileUsage,ParentProcessId,PeakPageFileUsage,PeakVirtualSize,PeakWorkingSetSize,Priority,PrivatePageCount,ProcessId,QuotaNonPagedPoolUsage,QuotaPagedPoolUsage,QuotaPeakNonPagedPoolUsage,QuotaPeakPagedPoolUsage,ReadOperationCount,ReadTransferCount,SessionId,Status,TerminationDate,ThreadCount,UserModeTime,VirtualSize,WorkingSetSize,WriteOperationCount,WriteTransferCount
 
 $executables = ($processes  | select-object @{n="ExecutablePath";e={$_.ExecutablePath.ToLower()} } -Unique) | where-object {$_.ExecutablePath -ne $null -and (Test-Path $_.ExecutablePath -ErrorAction SilentlyContinue)}
@@ -10,7 +10,7 @@ foreach($exe in $executables)
     Add-Member -InputObject $exe -MemberType NoteProperty -Name SHA1Hash -Value (Get-FileHash $exe.ExecutablePath -Algorithm SHA1 -ErrorAction SilentlyContinue).Hash
     Add-Member -InputObject $exe -MemberType NoteProperty -Name SHA512Hash -Value (Get-FileHash $exe.ExecutablePath -Algorithm SHA512 -ErrorAction SilentlyContinue).Hash
     $fileinfo = Get-AuthenticodeSignature $exe.ExecutablePath 
-    $certificateinfo = $fileinfo | Select-Object SignerCertificate,TimeStamperCertificate,Status,StatusMessage
+    $certificateinfo = $fileinfo | Select-Object SignerCertificate,TimeStamperCertificate,CertificateStatus,CertificateStatusMessage
     $certificateinfo.SignerCertificate = $fileinfo.SignerCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
     $certificateinfo.TimeStamperCertificate = $fileinfo.TimeStamperCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
     Add-Member -InputObject $exe -MemberType NoteProperty -Name CertificateInfo -Value $certificateinfo
@@ -24,17 +24,23 @@ foreach ($p in $processes)
     $parentp = $processes | Where-Object {$_.ProcessId -eq $ppid}
     if($parentp -ne $null)
     {
-        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessName -Value ($parentp.Name[0] | Out-string).Split("`n")[0].TrimEnd()
-        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessCommandLine -Value ($parentp.CommandLine | Out-string).Split("`n")[0].TrimEnd()
-        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessExecutablePath -Value ($parentp.ExecutablePath | Out-string).Split("`n")[0].TrimEnd()
+        if($parentp.count -ne $null){
+            $parentp = $parentp[0]
+        }
+        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessName -Value $parentp.Name
+        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessCommandLine -Value $parentp.CommandLine
+        Add-Member -InputObject $p -MemberType NoteProperty -Name ParentProcessExecutablePath -Value $parentp.ExecutablePath
         $pppid = $parentp.ParentProcessId
         $grandparentp = $processes | Where-Object {$_.ProcessId -eq $pppid}
         if($grandparentp -ne $null)
         {
-            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessId -Value ($grandparentp.ProcessId | Out-string).Split("`n")[0].TrimEnd()
-            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessName -Value ($grandparentp.Name | Out-string).Split("`n")[0].TrimEnd()
-            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessCommandLine -Value ($grandparentp.CommandLine | Out-string).Split("`n")[0].TrimEnd()
-            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessExecutablePath -Value ($grandparentp.ExecutablePath | Out-string).Split("`n")[0].TrimEnd()
+            if($grandparentp.count -ne $null){
+                $grandparentp = $grandparentp[0]
+            }
+            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessId -Value $grandparentp.ProcessId
+            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessName -Value $grandparentp.Name
+            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessCommandLine -Value $grandparentp.CommandLine
+            Add-Member -InputObject $p -MemberType NoteProperty -Name GrandParentProcessExecutablePath -Value $grandparentp.ExecutablePath
         }
     }
     $pexec = $p.ExecutablePath
@@ -54,4 +60,5 @@ foreach ($p in $processes)
 
     }
 }
+
 $processes | ForEach-Object {Write-Output ($_ | ConvertTo-Json -Compress)}

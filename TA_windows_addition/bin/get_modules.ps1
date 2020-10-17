@@ -1,4 +1,4 @@
-$allProcesses = [System.Diagnostics.Process]::GetProcesses()
+﻿$allProcesses = [System.Diagnostics.Process]::GetProcesses()
 $moduledetails = @()
 foreach($p in $allProcesses)
 {
@@ -12,11 +12,12 @@ foreach($p in $allProcesses)
                 if($existingModule.Count){
                     $existingModule = $existingModule[0]
                 }
-                $existingModule.ParentProcesses += , $pinfo
+                $existingModule.CallingProcesses += , $pinfo
             }else{
-                $obj=$m | Select-Object ModuleName,FileName,ModuleMemorySize,FileVersionInfo,Company,Description,FileVersion,Product,ProductVersion,Size, Processes, ParentProcesses
+                $obj=$m | Select-Object ModuleName,FileName,ModuleMemorySize,FileVersionInfo,Company,Description,FileVersion,Product,ProductVersion,Size, Processes, CallingProcesses
                 $obj.FileName = $filename
-                $obj.ParentProcesses = @($pinfo)
+                $obj.CallingProcesses = @($pinfo)
+
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA256Hash -Value (Get-FileHash $filename -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name MD5Hash -Value (Get-FileHash $filename -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA1Hash -Value (Get-FileHash $filename -Algorithm SHA1 -ErrorAction SilentlyContinue).Hash
