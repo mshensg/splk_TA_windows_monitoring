@@ -1,12 +1,3 @@
-<#$logfile = Get-ItemProperty c:\logs\serviceinfo.json -ErrorAction SilentlyContinue
-if($logfile){
-    $lastupdate = $logfile.LastWriteTime
-    $age = $(Get-Date) - $lastupdate
-    if($age.TotalHours -gt 2){
-        Remove-Item C:\logs\serviceinfo.json
-    }
-}#>
-
 $s = Get-WmiObject -Query "Select * from Win32_Service"
 
 $services = $s | Select-Object @{n="timestamp";e={Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff K"}},AcceptPause,AcceptStop,Caption,DelayedAutoStart,Description,DesktopInteract,DisplayName,ErrorControl,ExitCode,InstallDate,Name,PathName,ProcessId,ServiceType,Started,StartMode,StartName,State,Status
@@ -49,5 +40,4 @@ foreach ($p in $services)
         Add-Member -InputObject $p -MemberType NoteProperty -Name ExecutableDetails -Value $filedetails.ExecutableDetails
     }
 }
-#$services | ForEach-Object {($_ | ConvertTo-Json -Compress) | Add-content c:\logs\serviceinfo.json}
 $services | ForEach-Object {Write-Output ($_ | ConvertTo-Json -Compress)}
