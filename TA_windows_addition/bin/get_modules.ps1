@@ -23,7 +23,7 @@ foreach($p in $allProcesses)
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA1Hash -Value (Get-FileHash $filename -Algorithm SHA1 -ErrorAction SilentlyContinue).Hash
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA512Hash -Value (Get-FileHash $filename -Algorithm SHA512 -ErrorAction SilentlyContinue).Hash
                 $fileinfo = Get-AuthenticodeSignature $filename 
-                $certificateinfo = $fileinfo | Select-Object SignerCertificate,TimeStamperCertificate,CertificateStatus,CertificateStatusMessage
+                $certificateinfo = $fileinfo | Select-Object @{n="timestamp";e={Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff K"}},SignerCertificate,TimeStamperCertificate,CertificateStatus,CertificateStatusMessage
                 $certificateinfo.SignerCertificate = $fileinfo.SignerCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
                 $certificateinfo.TimeStamperCertificate = $fileinfo.TimeStamperCertificate | Select-object Subject, FriendlyNamem, Issuer, @{n="NotAfter";e={$_.NotAfter.ToString("o")}}, @{n="NotBefore";e={$_.NotBefore.ToString("o")}}, SerialNumber, Thumbprint, DnsNameList,EnhancedKeyUsageList, SendAsTrustedIssuer
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name CertificateInfo -Value $certificateinfo
