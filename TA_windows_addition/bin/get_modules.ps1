@@ -12,11 +12,11 @@ foreach($p in $allProcesses)
                 if($existingModule.Count){
                     $existingModule = $existingModule[0]
                 }
-                $existingModule.CallingProcesses += , $pinfo
+                $existingModule.ParentProcesses += , $pinfo
             }else{
-                $obj=$m | Select-Object ModuleName,FileName,ModuleMemorySize,FileVersionInfo,Company,Description,FileVersion,Product,ProductVersion,Size, Processes, CallingProcesses
+                $obj=$m | Select-Object ModuleName,FileName,ModuleMemorySize,FileVersionInfo,Company,Description,FileVersion,Product,ProductVersion,Size, Processes, ParentProcesses
                 $obj.FileName = $filename
-                $obj.CallingProcesses = @($pinfo)
+                $obj.ParentProcesses = @($pinfo)
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA256Hash -Value (Get-FileHash $filename -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name MD5Hash -Value (Get-FileHash $filename -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
                 Add-Member -InputObject $obj -MemberType NoteProperty -Name SHA1Hash -Value (Get-FileHash $filename -Algorithm SHA1 -ErrorAction SilentlyContinue).Hash
