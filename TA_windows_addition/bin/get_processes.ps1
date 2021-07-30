@@ -55,7 +55,6 @@ foreach ($p in $processes)
         Add-Member -InputObject $p -MemberType NoteProperty -Name SHA512Hash -Value $filedetails.SHA512Hash
 
         Add-Member -InputObject $p -MemberType NoteProperty -Name CertificateInfo -Value $filedetails.CertificateInfo
-
         Add-Member -InputObject $p -MemberType NoteProperty -Name ExecutableDetails -Value $filedetails.ExecutableDetails
 
     }
