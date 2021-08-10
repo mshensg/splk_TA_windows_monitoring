@@ -98,6 +98,6 @@ function Get-RecursiveGroupMembers {
 }
 
 $results=Get-RecursiveGroupMembers -ComputerName $env:COMPUTERNAME
-$results | % { Write-Host ($_ | ConvertTo-Json -Compress)}
+$results | % { Write-Output ($_ | ConvertTo-Json -Compress)}
 
 
